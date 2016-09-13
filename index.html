@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Poopipeedia</title>
+    <script src="jquery-3.1.0.min.js"></script>
+    <script src="mustache.min.js"></script>
+    <script>
+      $( document ).ready( function () {
+        $.get( {
+          url: 'https://en.wikipedia.org/w/api.php',
+          data: {
+            action: 'query',
+            list: 'abuselog',
+            aflfilter: '46',
+            aflprop: 'ids|details',
+            afllimit: 50,
+            format: 'json'
+          },
+          dataType: 'jsonp'
+        } ).done( function ( data ) {
+          $( 'main' ).html( '' );
+          data.query.abuselog.forEach( function ( poop ) {
+            if ( poop.details.added_lines ) {
+              var view = {
+                id: poop.id,
+                article: poop.details.article_text,
+                username: poop.details.user_name,
+                timestamp: new Date(
+                  poop.details.timestamp * 1000
+                ).toUTCString().replace( 'GMT', '(UTC)' ),
+                added_lines: poop.details.added_lines
+              };
+              var template = $( '#poop' ).html();
+              Mustache.parse( template );
+              $( 'main' ).append(
+                Mustache.render( template, view )
+              );
+            }
+          } );
+          $( 'main' ).html(
+            $( 'main' ).html().replace( /((?:p+[0o][0o]+p+|po(?:po)+)(?:head|ing?)?)/ig, '<strong>$1</strong>' )
+          );
+        } );
+      } );
+    </script>
+  </head>
+  <style type="text/css">
+    body {
+      font-family: sans-serif;
+    }
+    article {
+      border-top: solid 1px black;
+      padding-bottom: 5px;
+      padding-top: 20px;
+    }
+    .added-lines strong {
+      color: red;
+    }
+  </style>
+  <body>
+    <h1>Poopipeedia</h1>
+    <main>
+      Loading...
+    </main>
+    <script id="poop" type="text/template">
+      <article>
+        <header>
+          <strong>
+            <a target='_blank' href='https://en.wikipedia.org/wiki/{{ article }}'>
+              {{ article }}
+            </a>
+          </strong>
+        </header>
+        <dl>
+          <dt>Username</dt>
+          <dd>
+            <a target='_blank' href='https://en.wikipedia.org/wiki/Special:Contributions/{{ username }}'>
+              {{ username }}
+            </a>
+          </dd>
+          <dt>Timestamp</dt>
+          <dd>
+            <a target='_blank' href='https://en.wikipedia.org/wiki/Special:AbuseLog/{{ id }}'>
+              {{ timestamp }}
+            </a>
+          </dd>
+          <dt>Change</dt>
+          <dd class='added-lines'>
+            {{ added_lines }}
+          </dd>
+        </dl>
+      </article>
+    </script>
+  </body>
+</html>
