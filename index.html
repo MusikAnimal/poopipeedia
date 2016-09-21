@@ -12,45 +12,58 @@
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
       ga('create', 'UA-84547412-1', 'auto');
       ga('send', 'pageview');
       $( document ).ready( function () {
-        $.get( {
-          url: 'https://en.wikipedia.org/w/api.php',
-          data: {
+        var offset;
+        var loadData = function () {
+          $( '.loading' ).show();
+          $( '.load-more' ).hide();
+          var params = {
             action: 'query',
             list: 'abuselog',
             aflfilter: '46',
             aflprop: 'ids|details',
             afllimit: 50,
             format: 'json'
-          },
-          dataType: 'jsonp'
-        } ).done( function ( data ) {
-          $( 'main' ).html( '' );
-          data.query.abuselog.forEach( function ( poop ) {
-            if ( poop.details.added_lines ) {
-              var view = {
-                id: poop.id,
-                article: poop.details.article_text,
-                username: poop.details.user_name,
-                timestamp: new Date(
-                  poop.details.timestamp * 1000
-                ).toUTCString().replace( 'GMT', '(UTC)' ),
-                added_lines: poop.details.added_lines
-              };
-              var template = $( '#poop' ).html();
-              Mustache.parse( template );
-              $( 'main' ).append(
-                Mustache.render( template, view )
-              );
-            }
+          };
+          if (offset) params.aflstart = offset;
+          $.get( {
+            url: 'https://en.wikipedia.org/w/api.php',
+            data: params,
+            dataType: 'jsonp'
+          } ).done( function ( data ) {
+            data.query.abuselog.forEach( function ( poop ) {
+              if ( poop.details.added_lines ) {
+                var view = {
+                  id: poop.id,
+                  article: poop.details.article_text,
+                  username: poop.details.user_name,
+                  timestamp: new Date(
+                    poop.details.timestamp * 1000
+                  ).toUTCString().replace( 'GMT', '(UTC)' ),
+                  added_lines: poop.details.added_lines
+                };
+                var template = $( '#poop' ).html();
+                Mustache.parse( template );
+                var $node = $( 'main' ).append(
+                  Mustache.render( template, view )
+                );
+                $node.html(
+                  $node.html().replace( /((?:p+[0o][0o]+p+|po(?:po)+)(?:head|ing?)?)/ig, '<strong>$1</strong>' )
+                );
+              }
+            } );
+            offset = data.continue.aflstart;
+            $( '.load-more' ).show();
+            $( '.loading' ).hide();
           } );
-          $( 'main' ).html(
-            $( 'main' ).html().replace( /((?:p+[0o][0o]+p+|po(?:po)+)(?:head|ing?)?)/ig, '<strong>$1</strong>' )
-          );
+        };
+        $( '.load-more' ).on( 'click', function (e) {
+          e.preventDefault();
+          loadData();
         } );
+        loadData();
       } );
     </script>
   </head>
@@ -61,6 +74,9 @@
     .header {
       height: 60px;
       line-height: 60px;
+    }
+    footer {
+      margin: 20px 0 30px;
     }
     img {
       display: inline-block;
@@ -86,9 +102,7 @@
       <img src="poop.svg" />
       <h1>Poopipeedia</h1>
     </header>
-    <main>
-      Loading...
-    </main>
+    <main></main>
     <script id="poop" type="text/template">
       <article>
         <header>
@@ -118,5 +132,9 @@
         </dl>
       </article>
     </script>
+    <footer>
+      <div class="loading">Loading...</div>
+      <a class="load-more" href="#">Load more</a>
+    </footer>
   </body>
 </html>
