@@ -50,7 +50,7 @@
                   Mustache.render( template, view )
                 );
                 $node.html(
-                  $node.html().replace( /((?:p+[0o][0o]+p+|po(?:po)+)(?:head|ing?)?)/ig, '<strong>$1</strong>' )
+                  $node.html().replace( /((?:p+[0o][0o]+p+|po(?:po)+)(?:ers?|ies?|s|ed|ing?)?\s*(?:heads?)?|(p[3e][3e]+)+d?)/ig, '<strong>$1</strong>' )
                 );
               }
             } );
